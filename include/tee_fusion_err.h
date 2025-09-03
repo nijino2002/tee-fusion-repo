@@ -1,0 +1,2 @@
+#pragma once
+typedef enum { TEE_OK=0, TEE_EGENERAL=-1, TEE_ENOTSUP=-2, TEE_EBADSTATE=-3, TEE_EINVAL=-4, TEE_ENOMEM=-5, TEE_EBUSY=-6, TEE_EINTERNAL=-7 } tee_status_t;
