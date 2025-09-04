@@ -38,7 +38,11 @@ tee-fusion/
 安装依赖：
 ```bash
 sudo apt-get update
-sudo apt-get install -y build-essential cmake pkg-config libssl-dev
+sudo apt-get install -y build-essential cmake pkg-config git libssl-dev uuid-dev \
+                        python3 python3-pip python3-pyelftools \
+                        device-tree-compiler gcc-aarch64-linux-gnu g++-aarch64-linux-gnu \
+                        gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf
+sudo apt-get install -y device-tree-compiler   # 构建 optee_os 需要 dtc
 ```
 
 ---
@@ -56,6 +60,104 @@ make -j$(nproc)
 - `bin/ratls_client`
 
 ---
+
+## 自动拉取/编译 OP‑TEE Client（libteec）
+
+当 `-DTEE_PLATFORM=optee` 时，构建系统会：
+- 优先查找系统已安装的 `tee_client_api.h` 与 `libteec`；
+- 若未找到且启用 `-DOPTEE_CLIENT_AUTO_FETCH=ON`（默认），自动从 Git 拉取并编译 `optee_client`，并将生成的 `include/` 与 `libteec.so` 注入到本工程的编译链路；
+- 成功后定义编译宏 `HAVE_TEEC=1`，启用真实 CA↔TA 调用路径；否则退回到 PoC fallback（无 TEEC 也能编译运行）。
+
+示例：
+```bash
+mkdir build && cd build
+cmake -DTEE_PLATFORM=optee -DOPTEE_CLIENT_AUTO_FETCH=ON ..
+make -j$(nproc)
+```
+
+可选参数：
+- `-DOPTEE_CLIENT_GIT_REPO=https://github.com/OP-TEE/optee_client.git`
+- `-DOPTEE_CLIENT_GIT_TAG=4.0.0`
+
+说明：自动拉取需要网络访问与 `git`/`make`。若你的环境不具备网络，可手动安装/指定：
+- `-DTEEC_INCLUDE_DIR=/path/to/export/include` 以及 `-DTEEC_LIB=/path/to/export/lib/libteec.so`
+
+---
+
+## 自动拉取/编译 OP‑TEE TA（Trusted Application）
+
+为了让示例在 OP‑TEE 平台完整跑通，本仓库内置 TA 源码（`optee/ta/`）并支持以下三种方式构建 TA：
+
+- 使用系统/现有的 TA Dev Kit：
+  - 准备好 OP‑TEE OS 导出的 TA Dev Kit（通常在 `optee_os/out/export-ta_arm64`）。
+  - 设置变量：`-DOPTEE_TA_DEV_KIT_DIR=/path/to/export-ta_arm64`，可选指定交叉工具链：`-DOPTEE_TA_CROSS_COMPILE=aarch64-linux-gnu-`。
+- 自动拉取并编译 OP‑TEE OS 获取 Dev Kit（默认开启）：
+  - `-DOPTEE_TA_AUTO_FETCH=ON`（默认 ON），CMake 会通过 `ExternalProject` 拉取 `optee_os` 并调用 `make PLATFORM=<...> CROSS_COMPILE=<...>` 生成 Dev Kit，然后用其构建 `optee/ta`。
+  - 可选参数：
+    - `-DOPTEE_OS_GIT_REPO=https://github.com/OP-TEE/optee_os.git`
+    - `-DOPTEE_OS_GIT_TAG=4.0.0`
+    - `-DOPTEE_OS_PLATFORM=vexpress-qemu_armv8a`（与目标板/模拟器匹配）
+    - `-DOPTEE_TA_ARCH=arm64`（或 `arm`）
+    - `-DOPTEE_TA_CROSS_COMPILE=aarch64-linux-gnu-`
+- 直接在 TA 目录手动构建：
+  - `make -C optee/ta TA_DEV_KIT_DIR=/path/to/export-ta_arm64 CROSS_COMPILE=aarch64-linux-gnu-`
+
+注意：自动拉取/构建 TA 需要可用的交叉编译工具链（例如 `aarch64-linux-gnu-gcc`）和网络。若环境受限，建议预先准备好 TA Dev Kit 路径并通过 `-DOPTEE_TA_DEV_KIT_DIR` 指定。
+
+---
+
+## 示例：OP‑TEE QEMU‑v8 烟雾测试
+
+当以 `-DTEE_PLATFORM=optee` 构建时，将额外生成 `bin/optee_smoke`。
+
+1) 构建（QEMU‑v8，推荐 arm32 TA）
+```bash
+mkdir build && cd build
+cmake -DTEE_PLATFORM=optee \
+      -DOPTEE_CLIENT_AUTO_FETCH=ON \
+      -DOPTEE_TA_AUTO_FETCH=ON \
+      -DOPTEE_OS_PLATFORM=vexpress-qemu_armv8a \
+      -DOPTEE_TA_ARCH=arm32 \
+      -DOPTEE_TA_CROSS_COMPILE=arm-linux-gnueabihf- \
+      -DOPTEE_TA_CROSS_COMPILE32=arm-linux-gnueabihf- \
+      -DOPTEE_TA_CROSS_COMPILE64=aarch64-linux-gnu- ..
+make -j$(nproc)
+```
+
+可选：64 位 TA（若你的环境需要）
+```bash
+cmake -DTEE_PLATFORM=optee \
+      -DOPTEE_CLIENT_AUTO_FETCH=ON \
+      -DOPTEE_TA_AUTO_FETCH=ON \
+      -DOPTEE_OS_PLATFORM=vexpress-qemu_armv8a \
+      -DOPTEE_TA_ARCH=arm64 \
+      -DOPTEE_TA_CROSS_COMPILE=aarch64-linux-gnu- \
+      -DOPTEE_TA_CROSS_COMPILE32=arm-linux-gnueabihf- \
+      -DOPTEE_TA_CROSS_COMPILE64=aarch64-linux-gnu- ..
+make -j$(nproc)
+```
+
+2) 部署 TA（若希望走真实 CA↔TA 通路）
+- 将生成的 TA 复制到来宾机（OP‑TEE OS）目录：
+  - arm32: `optee/ta/export-ta_arm32/ta/7a9b3b24-3e2f-4d5f-912d-8b7c1355629a.ta`
+  - arm64: `optee/ta/export-ta_arm64/ta/7a9b3b24-3e2f-4d5f-912d-8b7c1355629a.ta`
+- 来宾机路径：`/lib/optee_armtz/`
+- 确保来宾机已加载 OP‑TEE 驱动并启动 `tee-supplicant`，存在 `/dev/tee*`
+
+说明：即使未部署 TA，本示例也可运行（使用适配器里的回退逻辑），但无法验证真实 TA 通路。
+
+3) 运行测试
+```bash
+./bin/optee_smoke
+```
+
+输出将包含：
+- 随机数；
+- 原生 token（若 TA 或环境变量提供）；
+- 生成的公钥与签名校验结果（verify=ok）；
+- U‑Evidence（CBOR）大小；
+- OCall 回显。
+
 
 ## 运行示例 (RA-TLS)
 

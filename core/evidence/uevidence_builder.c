@@ -4,7 +4,7 @@
 #include "../../include/tee_fusion.h"
 void mapping_reset(); void mapping_set_common(const char*,const char*,int,unsigned int);
 void mapping_set_sw_measurement(const uint8_t*,size_t); void mapping_add_extra_measurement(const uint8_t*,size_t);
-void mapping_set_native_quote(const uint8_t*,size_t); const void* mapping_get();
+void mapping_set_native_quote(const uint8_t*,size_t);
 typedef struct { char hw_model[32]; char iso_class[16]; int debug; unsigned int sv; uint8_t sw_meas[48]; size_t sw_meas_len; uint8_t extra_meas[48]; size_t extra_meas_len; uint8_t* native_quote; size_t native_quote_len; } claims_stash_t;
 extern const claims_stash_t* mapping_get();
 static uint8_t G_NONCE[64]; static size_t G_NONCE_LEN; static uint8_t G_PUB[192]; static size_t G_PUB_LEN;

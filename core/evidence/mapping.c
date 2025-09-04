@@ -1,5 +1,6 @@
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include "../../include/tee_fusion.h"
 typedef struct {
   char hw_model[32]; char iso_class[16]; int debug; unsigned int sv;

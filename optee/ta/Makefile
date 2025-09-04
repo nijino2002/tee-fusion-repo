@@ -1,8 +1,20 @@
-# OP-TEE TA build skeleton for qemu-v8
-# Set before make:
-#   export TA_DEV_KIT_DIR=/path/to/optee_os/out/arm/export-ta_arm64
-#   export CROSS_COMPILE=aarch64-linux-gnu-
+ARCH ?= aarch64
+BINARY := optee_fusion_ta
+
+# Expect TA_DEV_KIT_DIR to be provided by CMake or environment
+ifeq (,$(TA_DEV_KIT_DIR))
+$(error TA_DEV_KIT_DIR is not set. Point it to the OP-TEE TA dev kit export, e.g. optee_os/out/export-ta_$(ARCH))
+endif
+
+# Optional: toolchain prefix, e.g. aarch64-linux-gnu-
+CROSS_COMPILE ?= aarch64-linux-gnu-
+
+# Default log level can be overridden by environment
+CFG_TEE_TA_LOG_LEVEL ?= 0
+
+# Source layout
+SRCS := optee_fusion_ta.c
+
+# Include TA Dev Kit makefile
 include $(TA_DEV_KIT_DIR)/mk/ta_dev_kit.mk
-BINARY=7a9b3b24-3e2f-4d5f-912d-8b7c1355629a
-SRC := optee_fusion_ta.c
-CPPFLAGS += -I. -I../../adapters/optee
+

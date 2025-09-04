@@ -1,7 +1,19 @@
 #pragma once
-#include <tee_api_defines.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <tee_internal_api.h>
+#include <utee_defines.h>
+
+/* Reuse UUID from adapters header to keep CA/TA in sync */
 #include "../../adapters/optee/optee_fusion_ta_uuid.h"
+
 #define TA_UUID TA_OPTEE_FUSION_UUID
-#define TA_FLAGS      (TA_FLAG_SINGLE_INSTANCE | TA_FLAG_MULTI_SESSION)
-#define TA_STACK_SIZE (2 * 1024)
-#define TA_DATA_SIZE  (32 * 1024)
+
+/* Basic TA properties: multi-session, keep-alive for demo */
+#define TA_FLAGS        (TA_FLAG_MULTI_SESSION | TA_FLAG_INSTANCE_KEEP_ALIVE)
+#define TA_STACK_SIZE   (2 * 1024)
+#define TA_DATA_SIZE    (32 * 1024)
+
+/* Optional: description */
+#define TA_DESCRIPTION  "tee-fusion demo TA"
+

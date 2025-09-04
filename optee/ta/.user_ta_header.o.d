@@ -1,0 +1,30 @@
+user_ta_header.o: \
+ /home/ldx1/dev/tee-fusion-repo/build/optee_os_ep-prefix/src/optee_os_ep/out/arm-plat-vexpress/export-ta_arm32/src/user_ta_header.c \
+ /home/ldx1/dev/tee-fusion-repo/build/optee_os_ep-prefix/src/optee_os_ep/out/arm-plat-vexpress/export-ta_arm32/include/compiler.h \
+ /home/ldx1/dev/tee-fusion-repo/build/optee_os_ep-prefix/src/optee_os_ep/out/arm-plat-vexpress/export-ta_arm32/include/config.h \
+ /home/ldx1/dev/tee-fusion-repo/build/optee_os_ep-prefix/src/optee_os_ep/out/arm-plat-vexpress/export-ta_arm32/include/malloc.h \
+ /usr/lib/gcc-cross/arm-linux-gnueabihf/13/include/stddef.h \
+ /home/ldx1/dev/tee-fusion-repo/build/optee_os_ep-prefix/src/optee_os_ep/out/arm-plat-vexpress/export-ta_arm32/include/types_ext.h \
+ /home/ldx1/dev/tee-fusion-repo/build/optee_os_ep-prefix/src/optee_os_ep/out/arm-plat-vexpress/export-ta_arm32/include/limits.h \
+ /home/ldx1/dev/tee-fusion-repo/build/optee_os_ep-prefix/src/optee_os_ep/out/arm-plat-vexpress/export-ta_arm32/include/inttypes.h \
+ /home/ldx1/dev/tee-fusion-repo/build/optee_os_ep-prefix/src/optee_os_ep/out/arm-plat-vexpress/export-ta_arm32/include/stdint.h \
+ /usr/lib/gcc-cross/arm-linux-gnueabihf/13/include/stdbool.h \
+ /home/ldx1/dev/tee-fusion-repo/build/optee_os_ep-prefix/src/optee_os_ep/out/arm-plat-vexpress/export-ta_arm32/include/unistd.h \
+ /home/ldx1/dev/tee-fusion-repo/build/optee_os_ep-prefix/src/optee_os_ep/out/arm-plat-vexpress/export-ta_arm32/include/tee_ta_api.h \
+ /home/ldx1/dev/tee-fusion-repo/build/optee_os_ep-prefix/src/optee_os_ep/out/arm-plat-vexpress/export-ta_arm32/include/tee_internal_api.h \
+ /home/ldx1/dev/tee-fusion-repo/build/optee_os_ep-prefix/src/optee_os_ep/out/arm-plat-vexpress/export-ta_arm32/include/tee_api_defines.h \
+ /home/ldx1/dev/tee-fusion-repo/build/optee_os_ep-prefix/src/optee_os_ep/out/arm-plat-vexpress/export-ta_arm32/include/tee_api_types.h \
+ /home/ldx1/dev/tee-fusion-repo/build/optee_os_ep-prefix/src/optee_os_ep/out/arm-plat-vexpress/export-ta_arm32/include/trace.h \
+ /usr/lib/gcc-cross/arm-linux-gnueabihf/13/include/stdarg.h \
+ /home/ldx1/dev/tee-fusion-repo/build/optee_os_ep-prefix/src/optee_os_ep/out/arm-plat-vexpress/export-ta_arm32/include/trace_levels.h \
+ /home/ldx1/dev/tee-fusion-repo/build/optee_os_ep-prefix/src/optee_os_ep/out/arm-plat-vexpress/export-ta_arm32/include/tee_api_compat.h \
+ /home/ldx1/dev/tee-fusion-repo/build/optee_os_ep-prefix/src/optee_os_ep/out/arm-plat-vexpress/export-ta_arm32/include/tee_internal_api_extensions.h \
+ /home/ldx1/dev/tee-fusion-repo/build/optee_os_ep-prefix/src/optee_os_ep/out/arm-plat-vexpress/export-ta_arm32/include/stdio.h \
+ /home/ldx1/dev/tee-fusion-repo/build/optee_os_ep-prefix/src/optee_os_ep/out/arm-plat-vexpress/export-ta_arm32/include/tee_api_defines_extensions.h \
+ /home/ldx1/dev/tee-fusion-repo/build/optee_os_ep-prefix/src/optee_os_ep/out/arm-plat-vexpress/export-ta_arm32/include/user_ta_header.h \
+ /home/ldx1/dev/tee-fusion-repo/build/optee_os_ep-prefix/src/optee_os_ep/out/arm-plat-vexpress/export-ta_arm32/include/util.h \
+ user_ta_header_defines.h \
+ /home/ldx1/dev/tee-fusion-repo/build/optee_os_ep-prefix/src/optee_os_ep/out/arm-plat-vexpress/export-ta_arm32/include/utee_defines.h \
+ ../../adapters/optee/optee_fusion_ta_uuid.h \
+ /home/ldx1/dev/tee-fusion-repo/build/optee_os_ep-prefix/src/optee_os_ep/out/arm-plat-vexpress/export-ta_arm32/include/utee_syscalls.h \
+ /home/ldx1/dev/tee-fusion-repo/build/optee_os_ep-prefix/src/optee_os_ep/out/arm-plat-vexpress/export-ta_arm32/include/utee_types.h

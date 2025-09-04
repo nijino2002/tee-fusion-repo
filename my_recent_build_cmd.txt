@@ -1,0 +1,3 @@
+rm -rf build/ && mkdir build && cd build
+cmake -DTEE_PLATFORM=optee -DOPTEE_CLIENT_AUTO_FETCH=ON -DOPTEE_TA_AUTO_FETCH=ON -DOPTEE_OS_PLATFORM=vexpress-qemu_armv8a -DOPTEE_TA_ARCH=arm32 -DOPTEE_TA_CROSS_COMPILE=arm-linux-gnueabihf- -DOPTEE_TA_CROSS_COMPILE32=arm-linux-gnueabihf- -DOPTEE_TA_CROSS_COMPILE64=aarch64-linux-gnu- ..
+make -j$(nproc)

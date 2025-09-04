@@ -50,7 +50,8 @@ static TEE_Result cmd_key_sign(uint32_t ptypes, TEE_Param params[4]){
     if (res != TEE_SUCCESS) goto out;
     TEE_DigestDoFinal(dig, params[0].memref.buffer, params[0].memref.size, digest, &dlen);
 
-    res = TEE_AllocateOperation(&sig, TEE_ALG_ECDSA, TEE_MODE_SIGN, 256);
+    /* OP-TEE uses hash-specific ECDSA algo for sign-digest */
+    res = TEE_AllocateOperation(&sig, TEE_ALG_ECDSA_SHA256, TEE_MODE_SIGN, 256);
     if (res != TEE_SUCCESS) goto out;
     res = TEE_SetOperationKey(sig, g_key);
     if (res != TEE_SUCCESS) goto out;
