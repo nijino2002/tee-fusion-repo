@@ -11,9 +11,8 @@
 
 /* Basic TA properties: multi-session, keep-alive for demo */
 #define TA_FLAGS        (TA_FLAG_MULTI_SESSION | TA_FLAG_INSTANCE_KEEP_ALIVE)
-#define TA_STACK_SIZE   (2 * 1024)
-#define TA_DATA_SIZE    (32 * 1024)
+#define TA_STACK_SIZE   (8 * 1024)
+#define TA_DATA_SIZE    (64 * 1024)
 
 /* Optional: description */
 #define TA_DESCRIPTION  "tee-fusion demo TA"
-

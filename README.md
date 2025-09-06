@@ -43,6 +43,11 @@ sudo apt-get install -y build-essential cmake pkg-config git libssl-dev uuid-dev
                         device-tree-compiler gcc-aarch64-linux-gnu g++-aarch64-linux-gnu \
                         gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf
 sudo apt-get install -y device-tree-compiler   # 构建 optee_os 需要 dtc
+sudo apt-get install -y ninja-build bison flex rsync cpio unzip bc \
+                        libglib2.0-dev libpixman-1-dev libfdt-dev zlib1g-dev
+
+# 或者一键安装：
+sudo bash scripts/install_deps_ubuntu.sh
 ```
 
 ---
@@ -58,6 +63,7 @@ make -j$(nproc)
 生成的二进制：
 - `bin/ratls_server`
 - `bin/ratls_client`
+ - `bin/optee_smoke`（当 `TEE_PLATFORM=optee`）
 
 ---
 
@@ -106,6 +112,43 @@ make -j$(nproc)
 
 ---
 
+## 一键准备 OP‑TEE QEMU‑v8 环境（推荐）
+
+用于在新机器上快速拉起完整 OP‑TEE（qemu_v8）开发环境、导出 TA Dev Kit 并构建本仓库的 TA。
+
+1) 一键安装依赖（Ubuntu/Debian）：
+```bash
+sudo bash scripts/install_deps_ubuntu.sh
+```
+
+2) 在构建目录执行一键脚本（需先完成 CMake 配置，见“构建”章节）：
+```bash
+cd build
+make optee_qemu_v8_setup
+# 如希望缺包自动安装（ninja/bison/flex/gnutls-dev）：
+OPTEE_AUTO_APT=1 make optee_qemu_v8_setup
+```
+
+脚本行为：
+- 在 `third_party/optee_ws/` 下创建官方工作区（使用 repo + qemu_v8 manifest），稳健同步（单线程、重试、浅克隆）。
+- 构建顺序：`toolchains` → `optee-os-devkit` → `buildroot`（默认 `RUST_ENABLE=n`）。
+- 自动探测 `optee_os/out/**/export-ta_{arm32,arm64}`，清理旧 `.o/.d`，并使用匹配的交叉工具链重建 `optee/ta/`。
+- 输出后续启动 QEMU 与部署/运行说明。
+
+3) 启动 QEMU（另一个终端）：
+```bash
+make -C third_party/optee_ws/build -f qemu_v8.mk run
+```
+
+4) 来宾机验证（可选）：
+- 构建来宾机程序：`make build_optee_smoke_guest`（产生 `build/bin/optee_smoke_guest`）
+- 将 TA 拷入来宾机 `/lib/optee_armtz/7a9b3b24-3e2f-4d5f-912d-8b7c1355629a.ta`
+- 将 `optee_smoke_guest` 拷入来宾机并运行：`./optee_smoke_guest`
+
+提示：主机侧可先运行回退版自检：`make run_optee_smoke`
+
+---
+
 ## 示例：OP‑TEE QEMU‑v8 烟雾测试
 
 当以 `-DTEE_PLATFORM=optee` 构建时，将额外生成 `bin/optee_smoke`。
@@ -146,7 +189,7 @@ make -j$(nproc)
 
 说明：即使未部署 TA，本示例也可运行（使用适配器里的回退逻辑），但无法验证真实 TA 通路。
 
-3) 运行测试
+3) 运行测试（主机侧回退路径）
 ```bash
 ./bin/optee_smoke
 ```
@@ -157,6 +200,31 @@ make -j$(nproc)
 - 生成的公钥与签名校验结果（verify=ok）；
 - U‑Evidence（CBOR）大小；
 - OCall 回显。
+
+---
+
+## 故障排查（QEMU‑v8）
+
+- 缺包：`sudo bash scripts/install_deps_ubuntu.sh`，或设置 `OPTEE_AUTO_APT=1` 后重试 `make optee_qemu_v8_setup`。
+- repo 同步失败：配置代理或手动执行 `repo sync -c -j1 --no-clone-bundle --fetch-submodules --fail-fast`。
+- 工具链缺失：先执行 `make -C third_party/optee_ws/build -f qemu_v8.mk toolchains`，或安装系统交叉工具链（见依赖脚本）。
+- 未找到 TA Dev Kit：执行 `make -C third_party/optee_ws/build -f qemu_v8.mk optee-os-devkit V=1` 并确认 `optee_os/out/**/export-ta_*`。
+- TA 头文件指向旧路径：执行 `make -C optee/ta clean` 或删除 `optee/ta/*.o/*.d` 后重建。
+
+4) 在来宾机内运行（真实 TEEC/TA 通路）
+
+- 一键准备 QEMU‑v8 环境并构建 TA：
+  - `make optee_qemu_v8_setup`
+- 交叉构建来宾机可执行（AArch64）：
+  - `make build_optee_smoke_guest`
+  - 产物：`build/bin/optee_smoke_guest`
+- 启动 QEMU（另一个终端）：
+  - `make -C third_party/optee_build run-only`
+- 将 TA 与来宾机程序放入来宾机并运行：
+  - 将 `optee/ta/export-ta_arm32/ta/<UUID>.ta`（或 arm64）拷贝至来宾机 `/lib/optee_armtz/`
+  - 将 `build/bin/optee_smoke_guest` 拷贝至来宾机并执行：`./optee_smoke_guest`
+
+提示：optee/build 默认未启用 9p 共享目录。可参考其文档为 QEMU 添加 `-virtfs` 挂载参数，或通过 SSH/scp 将文件传入来宾机。
 
 
 ## 运行示例 (RA-TLS)
@@ -180,6 +248,21 @@ make -j$(nproc)
 - 公钥长度  
 - 签名长度  
 - U-Evidence 长度  
+
+---
+
+## 快速运行（make 目标）
+
+在构建完成后，可直接通过 `make` 运行常用示例：
+
+- 运行 OP‑TEE 烟雾测试（需 `TEE_PLATFORM=optee` 构建）：
+  - `make run_optee_smoke`
+- 启动 RA‑TLS 服务端（自动生成自签名证书）：
+  - `make run_ratls_server`
+- 启动 RA‑TLS 客户端并连接本机 8443：
+  - `make run_ratls_client`
+
+说明：上述目标默认使用 `0.0.0.0:8443`（服务端）与 `127.0.0.1:8443`（客户端），证书位于仓库根目录的 `server.crt/server.key`。你也可以直接运行 `bin/` 下的程序并自定义参数。
 
 ---
 

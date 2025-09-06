@@ -207,3 +207,49 @@ endif()
 
 enable_testing()
 add_subdirectory(tests)
+
+# Convenience run targets
+set(BIN_DIR "${CMAKE_BINARY_DIR}/bin")
+
+# Generate test certificates (outputs at repo root via existing script)
+add_custom_target(gencert
+  COMMAND /usr/bin/env bash ${CMAKE_SOURCE_DIR}/scripts/gencert.sh
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  COMMENT "Generating test TLS certificates"
+)
+
+add_custom_target(run_ratls_server
+  COMMAND ${BIN_DIR}/ratls_server 0.0.0.0 8443 ${CMAKE_SOURCE_DIR}/server.crt ${CMAKE_SOURCE_DIR}/server.key
+  DEPENDS ratls_server gencert
+  WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+  COMMENT "Running RA-TLS server on 0.0.0.0:8443"
+)
+
+add_custom_target(run_ratls_client
+  COMMAND ${BIN_DIR}/ratls_client 127.0.0.1 8443
+  DEPENDS ratls_client
+  WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+  COMMENT "Running RA-TLS client to 127.0.0.1:8443"
+)
+
+if(TARGET optee_smoke)
+  add_custom_target(run_optee_smoke
+    COMMAND ${BIN_DIR}/optee_smoke
+    DEPENDS optee_smoke
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    COMMENT "Running OP-TEE smoke test"
+  )
+endif()
+
+# Fetch/build OP-TEE QEMU v8 environment via optee/build
+add_custom_target(optee_qemu_v8_setup
+  COMMAND /usr/bin/env bash ${CMAKE_SOURCE_DIR}/scripts/optee_qemu_v8_setup.sh
+  WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+  COMMENT "Fetching and building OP-TEE QEMU v8 environment"
+)
+
+add_custom_target(build_optee_smoke_guest
+  COMMAND /usr/bin/env bash ${CMAKE_SOURCE_DIR}/scripts/optee_guest_build.sh
+  WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+  COMMENT "Cross-compiling optee_smoke_guest for AArch64 (QEMU guest)"
+)

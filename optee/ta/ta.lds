@@ -1,5 +1,5 @@
-OUTPUT_FORMAT("elf32-littlearm")
-OUTPUT_ARCH(arm)
+OUTPUT_FORMAT("elf64-littleaarch64")
+OUTPUT_ARCH(aarch64)
 SECTIONS {
  .text : {
   __text_start = .;
@@ -67,7 +67,7 @@ SECTIONS {
   *(.bss .bss.* .gnu.linkonce.b.* COMMON)
   . = ALIGN(8);
   __ftrace_buf_start = .;
-  . += DEFINED(__gnu_mcount_nc) ?
+  . += DEFINED(_mcount) ?
    2048 : 0;
   __ftrace_buf_end = .;
  }

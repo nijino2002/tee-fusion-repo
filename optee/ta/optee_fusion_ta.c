@@ -40,23 +40,35 @@ static TEE_Result cmd_get_pubkey_xy(uint32_t ptypes, TEE_Param params[4]){
 static TEE_Result cmd_key_sign(uint32_t ptypes, TEE_Param params[4]){
     if (ptypes != TEE_PARAM_TYPES(TEE_PARAM_TYPE_MEMREF_INPUT, TEE_PARAM_TYPE_MEMREF_OUTPUT, TEE_PARAM_TYPE_NONE, TEE_PARAM_TYPE_NONE))
         return TEE_ERROR_BAD_PARAMETERS;
+    if (!params[0].memref.buffer || params[0].memref.size == 0)
+        return TEE_ERROR_BAD_PARAMETERS;
+    if (!params[1].memref.buffer)
+        return TEE_ERROR_BAD_PARAMETERS;
     TEE_Result res = ensure_key(); if (res != TEE_SUCCESS) return res;
 
     TEE_OperationHandle dig = TEE_HANDLE_NULL;
     TEE_OperationHandle sig = TEE_HANDLE_NULL;
-    uint8_t digest[32]; uint32_t dlen = sizeof(digest);
+    uint8_t digest[32]; size_t dlen = sizeof(digest);
+    /* Preflight output size to avoid deep crypto path on obviously short buffers */
+    size_t min_sig = 72; /* DER-encoded ECDSA signature is ~70-72 bytes for P-256 */
+    if (params[1].memref.size < min_sig) {
+        params[1].memref.size = min_sig;
+        return TEE_ERROR_SHORT_BUFFER;
+    }
 
+    /* Digest input with SHA-256 */
     res = TEE_AllocateOperation(&dig, TEE_ALG_SHA256, TEE_MODE_DIGEST, 0);
     if (res != TEE_SUCCESS) goto out;
-    TEE_DigestDoFinal(dig, params[0].memref.buffer, params[0].memref.size, digest, &dlen);
+    res = TEE_DigestDoFinal(dig, params[0].memref.buffer, params[0].memref.size, digest, &dlen);
+    if (res != TEE_SUCCESS) goto out;
 
-    /* OP-TEE uses hash-specific ECDSA algo for sign-digest */
+    /* ECDSA over SHA-256 digest */
     res = TEE_AllocateOperation(&sig, TEE_ALG_ECDSA_SHA256, TEE_MODE_SIGN, 256);
     if (res != TEE_SUCCESS) goto out;
     res = TEE_SetOperationKey(sig, g_key);
     if (res != TEE_SUCCESS) goto out;
 
-    uint32_t out_sz = params[1].memref.size;
+    size_t out_sz = params[1].memref.size;
     res = TEE_AsymmetricSignDigest(sig, NULL, 0, digest, dlen, params[1].memref.buffer, &out_sz);
     if (res == TEE_ERROR_SHORT_BUFFER) { params[1].memref.size = out_sz; goto out; }
     if (res != TEE_SUCCESS) goto out;

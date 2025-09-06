@@ -13,8 +13,9 @@ CROSS_COMPILE ?= aarch64-linux-gnu-
 CFG_TEE_TA_LOG_LEVEL ?= 0
 
 # Source layout
-SRCS := optee_fusion_ta.c
+SRCS := ta_entry.c \
+        ../../secure_app/fusion_secure.c \
+        ../../secure_sapi/optee/sapi_optee.c
 
 # Include TA Dev Kit makefile
 include $(TA_DEV_KIT_DIR)/mk/ta_dev_kit.mk
-
